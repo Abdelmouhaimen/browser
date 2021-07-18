@@ -8,23 +8,28 @@ Welcome
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Card number</th>
-                <th>Expiration Date</th>
-                <th>CVV</th>
-                <th>Service</th>
-                <th>Transcated</th>
+                <th>Type</th>
+                <th>Name</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
 
-            {% for card in cards %}
+            {% for table in tables %}
                 <tr>
-                    <td>{{card[0]}}</td>
-                    <td>{{card[1]}}</td>
-                    <td>{{card[2]}}</td>
-                    <td>{{card[5]}}</td>
-                    <td>{{card[4]}}</td>
 
+                        <td>Table</td>
+                        <td>{{table[0]}}</td>
+                        <td>
+
+                            <form action="/change" method="post">
+                                <input type="hidden" name="host" value="{{host}}">
+                                <input type="hidden" name="database" value="{{database}}">
+                                <input type="hidden" name="user"  value="{{user}}">
+                                <input type="hidden" name="password"  value="{{password}}">
+                                <button type="submit" name="TABLE_NAME" value="{{table[0]}}" class="btn btn-primary">Browse</button>
+                            </form>
+                        </td>
 
                 </tr>
             {% endfor %}

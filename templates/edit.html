@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Welcome
+{% endblock %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                {% for head in heads %}
+                    <th>{{head[0]}}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+                <tr>
+                    <form action="/edit" method="post">
+                        <input type="hidden" name="TABLE_NAME" value="{{TABLE_NAME}}">
+                        <input type="hidden" name="host" value="{{host}}">
+                        <input type="hidden" name="database" value="{{database}}">
+                        <input type="hidden" name="user"  value="{{user}}">
+                        <input type="hidden" name="password"  value="{{password}}">
+                        {% for i in range(row|length)%}
+                            <td>
+                                <input type="hidden" name="old_{{heads[i][0]}}" value="{{row[i]}}">
+                                <input autocomplete="off" class="form-control" name="{{heads[i][0]}}" value="{{row[i]}}">
+                            </td>
+                        {% endfor %}
+                        <td><button class="btn btn-primary" style="background-color : black; border-color: black;" name="button_type" value="confirm">Confirm</button></td>
+                    </form>
+                </tr>
+
+        </tbody>
+    </table>
+{% endblock %}

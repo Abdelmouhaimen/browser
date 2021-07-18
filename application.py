@@ -29,99 +29,205 @@ def after_request(response):
     return response
 
 
-# Configure session to use filesystem (instead of signed cookies)
-app.config["SESSION_FILE_DIR"] = mkdtemp()
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
 
-# Configure CS50 Library to use SQLite database
-mydb = psycopg2.connect(user='kdjmispwzuqrpa', password='79fabf4112ead809504789c52d5037b2ecdd9967a4a4ef9c64c79df78bf36064', host='ec2-54-74-14-109.eu-west-1.compute.amazonaws.com', database='d8lued2265pr44')
-db = mydb.cursor()
 
+
+
+
+
+
+
+@app.route("/edit", methods=["POST"])
+def edit():
+    button_type = request.form.get("button_type")
+
+
+    host = request.form.get("host")
+    database = request.form.get("database")
+    user = request.form.get("user")
+    password = request.form.get("password")
+
+    # Configure psycopg2 to use POSTGRESQL database if credentials are correct
+    mydb = psycopg2.connect(user=user, password = password, host = host, database=database)
+    db = mydb.cursor()
+
+    # get a list of column names from database from TABLE_NAME
+    TABLE_NAME = request.form.get("TABLE_NAME")
+    db.execute("select column_name from information_schema.columns where table_name= %s", (TABLE_NAME,))
+    heads = db.fetchall()
+
+    # select tables from datbaase
+    db.execute("""SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'""")
+    tables = db.fetchall()
+
+
+    # save info from added row in dict
+    data = {}
+    for head in heads:
+        data[head[0]] = request.form.get("old_" + head[0])
+    #query database to insert new row
+        #save conditions in one string
+    conditions = ""
+    for i in range(len(heads)):
+        if i == len(heads) - 1:
+            conditions += heads[i][0] + " = '" + data[heads[i][0]] + "'"
+            break
+        conditions += heads[i][0] + " = '" + data[heads[i][0]] + "' AND "
+
+    if button_type == 'delete':
+
+        db.execute("DELETE FROM " + TABLE_NAME + " WHERE " + conditions)
+        mydb.commit()
+
+        #get all rows data from database
+        db.execute("select * from " + TABLE_NAME)
+        rows = db.fetchall()
+
+
+        return render_template("change.html", rows = rows, heads = heads, tables = tables, host=host, database=database, user=user, password=password, exit="Exit", TABLE_NAME = TABLE_NAME)
+    if button_type == 'edit':
+
+        #get all rows data from database
+        db.execute("select * from " + TABLE_NAME + " WHERE " + conditions)
+        row = db.fetchall()[0]
+
+
+        return render_template("edit.html",data = data, row = row, heads = heads, tables = tables, host=host, database=database, user=user, password=password, exit="Exit", TABLE_NAME = TABLE_NAME)
+    if button_type == 'confirm':
+
+        # save info from edited row in dict
+        data = {}
+        for head in heads:
+            data[head[0]] = request.form.get(head[0])
+        #query database to edit row
+            #save new values string
+        new = ""
+        for i in range(len(heads)):
+            if i == len(heads) - 1:
+                new += heads[i][0] + " = '" + data[heads[i][0]] + "'"
+                break
+            new += heads[i][0] + " = '" + data[heads[i][0]] + "' , "
+
+        db.execute("UPDATE " + TABLE_NAME +  " SET "  + new + " WHERE " + conditions)
+        mydb.commit()
+
+        #get all rows data from database
+        db.execute("select * from " + TABLE_NAME)
+        rows = db.fetchall()
+
+        return render_template("change.html", rows = rows, heads = heads, tables = tables, host=host, database=database, user=user, password=password, exit="Exit", TABLE_NAME = TABLE_NAME)
+
+@app.route("/add", methods=["POST"])
+def add():
+    host = request.form.get("host")
+    database = request.form.get("database")
+    user = request.form.get("user")
+    password = request.form.get("password")
+
+    # Configure psycopg2 to use POSTGRESQL database if credentials are correct
+    mydb = psycopg2.connect(user=user, password = password, host = host, database=database)
+    db = mydb.cursor()
+
+    # get a list of column names from database from TABLE_NAME
+    TABLE_NAME = request.form.get("TABLE_NAME")
+    db.execute("select column_name from information_schema.columns where table_name= %s", (TABLE_NAME,))
+    heads = db.fetchall()
+
+    # save info from added row in dict
+    data = {}
+    for head in heads:
+        data[head[0]] = request.form.get(head[0])
+
+    #query database to insert new row
+        #save values in one string
+    values = "('"
+    for i in range(len(heads)):
+        if i == len(heads) - 1:
+            values += data[heads[i][0]] + "')"
+            break
+        values += data[heads[i][0]] + "', '"
+
+        #save column names in one string
+    cols = "("
+    for i in range(len(heads)):
+        if i == len(heads) - 1:
+            cols += heads[i][0] + ")"
+            break
+        cols += heads[i][0] + ", "
+
+    db.execute("INSERT INTO " + TABLE_NAME + cols + " VALUES" + values)
+    mydb.commit()
+
+    # select tables from datbaase
+    db.execute("""SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'""")
+    tables = db.fetchall()
+
+    #get all rows data from database
+    db.execute("select * from " + TABLE_NAME)
+    rows = db.fetchall()
+
+    return render_template("change.html", rows = rows, heads = heads, tables = tables, host=host, database=database, user=user, password=password, exit="Exit", TABLE_NAME = TABLE_NAME)
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # check the validity of key
-        if not request.form.get("key"):
-            return apology("invalid key")
 
-        # info about vccs lelft
-            # Select number of vccs cash from database
-        key = request.form.get("key")
-        db.execute("SELECT * FROM users WHERE username = %s", key)
-        rows = db.fetchall()
-        if len(rows) == 0:
-            return apology("Invalid key")
-        cash = rows[0][3]
-
-        # info about cards
-            #get all stocks properties
-        db.execute("SELECT * from cards WHERE usage = %s", key)
-        cards = db.fetchall()
+        host = request.form.get("host")
+        database = request.form.get("database")
+        user = request.form.get("user")
+        password = request.form.get("password")
 
 
+        # Configure psycopg2 to use POSTGRESQL database if credentials are correct
+        try:
+            mydb = psycopg2.connect(user=user, password = password, host = host, database=database)
+            db = mydb.cursor()
+        except:
+            return render_template("apology.html", top ='Database not found' , exit = 'EXIT')
 
-        return render_template("indexed.html", info = 'VCCs left : ' + str(cash), cash = cash, cards = cards)
+        # select tables from datbaase
+        db.execute("""SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'""")
+        tables = db.fetchall()
+        if tables[0][0] == None:
+            return apology("Database empty")
+
+        return render_template("indexed.html", tables = tables, host=host, database=database, user=user, password=password, exit="EXIT")
 
     else:
         return render_template("index.html")
 
-@app.route("/get", methods=["GET", "POST"])
-def get():
-    if request.method == "POST":
-        # Check the validity of the service and key
-        if not request.form.get("key"):
-            return apology("invalid key")
-        if not request.form.get("service"):
-            return apology("invalid service")
 
-        # variables
-        service = request.form.get("service")
-        key = request.form.get("key")
+@app.route("/change", methods=["POST"])
+def change():
+    host = request.form.get("host")
+    database = request.form.get("database")
+    user = request.form.get("user")
+    password = request.form.get("password")
 
-        # Select number of vccs cash from database
-        db.execute("SELECT * FROM users WHERE username = %s", key)
-        rows = db.fetchall()
-        if len(rows) == 0:
-            return apology("Invalid key")
-        cash = rows[0][3]
-            # check the validity of the key
+    # Configure psycopg2 to use POSTGRESQL database if credentials are correct
+    mydb = psycopg2.connect(user=user, password = password, host = host, database=database)
+    db = mydb.cursor()
 
-        # check if available cash is enough
-        if cash == 0:
-            return apology("You have 0 VCCs left")
+    # select tables from datbaase
+    db.execute("""SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'""")
+    tables = db.fetchall()
 
-        # check if database don't vcc cash
-        db.execute("SELECT number FROM cards WHERE usage = 'walo'")
-        rows = db.fetchall()
-        if len(rows) == 0:
-            return apology("VCC not available")
+    # get a list of column names from database
+    TABLE_NAME = request.form.get("TABLE_NAME")
+    db.execute("select column_name from information_schema.columns where table_name= %s", (TABLE_NAME,))
+    heads = db.fetchall()
 
-        # get one cardnumber not used
-        cardnumber = rows[0][0]
+    #get all rows data from database
+    db.execute("select * from " + TABLE_NAME)
+    rows = db.fetchall()
 
+    #get columns type
+    db.execute("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = %s", (TABLE_NAME,))
+    types = db.fetchall()
 
-        # Update bought card information
-        time = str(datetime.now().strftime("%x")+ ' ' + datetime.now().strftime("%X"))
-        db.execute("UPDATE cards SET TIME = '" + time + "' WHERE number = " + str(cardnumber))
-        mydb.commit()
-        db.execute("UPDATE cards SET usage = '" + key + "' WHERE number = " + str(cardnumber))
-        mydb.commit()
-        db.execute("UPDATE cards SET service = '" + service + "' WHERE number = " + str(cardnumber))
-        mydb.commit()
+    return render_template("change.html",types = types, rows = rows, heads = heads, tables = tables, host=host, database=database, user=user, password=password, exit="Exit", TABLE_NAME = TABLE_NAME)
 
-        # Update cash vccs to users database
-        db.execute("UPDATE users SET cash = " + str(cash - 1) + " where username = %s", key)
-        mydb.commit()
-
-        return redirect("/")
-
-    else:
-        mydb.commit()
-        return render_template("get.html")
 
 
 

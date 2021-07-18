@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Welcome
+{% endblock %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                {% for head in heads %}
+                    <th>{{head[0]}}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+
+                {% for type in types %}
+                    <th>{{type[0].upper()}}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+                <tr>
+                    <form action="/edit" method="post">
+                        <input type="hidden" name="TABLE_NAME" value="{{TABLE_NAME}}">
+                        <input type="hidden" name="host" value="{{host}}">
+                        <input type="hidden" name="database" value="{{database}}">
+                        <input type="hidden" name="user"  value="{{user}}">
+                        <input type="hidden" name="password"  value="{{password}}">
+                        {% for i in range(rows[0]|length)%}
+                            <input type="hidden" name="old_{{heads[i][0]}}" value="{{row[i]}}">
+                            <td>{{row[i]}}</td>
+                        {% endfor %}
+                        <td><button class="btn btn-primary"  style="background-color : black; border-color: black;" name="button_type" value="edit">Edit</button></td>
+                        <td><button class="btn btn-primary"  style="background-color : red; border-color: red;" name="button_type" value="delete">Delete</button></td>
+                    </form>
+                </tr>
+            {% endfor %}
+
+
+
+                <tr>
+                    <form action="/add" method="post">
+                        <input type="hidden" name="host" value="{{host}}">
+                        <input type="hidden" name="database" value="{{database}}">
+                        <input type="hidden" name="user"  value="{{user}}">
+                        <input type="hidden" name="password"  value="{{password}}">
+
+                    {% for head in heads %}
+                        <td>
+                            <input autocomplete="off" class="form-control" name="{{head[0]}}" placeholder="{{head[0]}}" type="text">
+                        </td>
+                    {% endfor %}
+                    <td><button class="btn btn-primary" style="background-color : green; border-color: green;" name="TABLE_NAME" value="{{TABLE_NAME}}" type="submit">Add</button></td>
+                    </form>
+                </tr>
+
+        </tbody>
+    </table>
+{% endblock %}
