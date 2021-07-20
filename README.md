@@ -1,4 +1,4 @@
-# YOUR PROJECT TITLE
+# PostgreSQL Browser
 #### Video Demo:  <URL HERE>
 #### Description:
 
