@@ -179,10 +179,6 @@ def index():
         user = request.form.get("user")
         password = request.form.get("password")
 
-        host = "ec2-54-74-14-109.eu-west-1.compute.amazonaws.com"
-        database= "d8lued2265pr44"
-        user= "kdjmispwzuqrpa"
-        password= "79fabf4112ead809504789c52d5037b2ecdd9967a4a4ef9c64c79df78bf36064"
 
         # Configure psycopg2 to use POSTGRESQL database if credentials are correct
         try:
