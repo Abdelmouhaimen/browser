@@ -76,11 +76,11 @@ def edit():
 
     if button_type == 'delete':
 
-        db.execute("DELETE FROM " + TABLE_NAME + " WHERE " + conditions)
+        db.execute('DELETE FROM "' + TABLE_NAME + '"' + ' WHERE ' + conditions)
         mydb.commit()
 
         #get all rows data from database
-        db.execute("select * from " + TABLE_NAME)
+        db.execute('select * from "' + TABLE_NAME + '"')
         rows = db.fetchall()
 
 
@@ -88,7 +88,7 @@ def edit():
     if button_type == 'edit':
 
         #get all rows data from database
-        db.execute("select * from " + TABLE_NAME + " WHERE " + conditions)
+        db.execute('SELECT * FROM "' + TABLE_NAME + '"' + ' WHERE ' + conditions)
         row = db.fetchall()[0]
 
 
@@ -108,11 +108,11 @@ def edit():
                 break
             new += heads[i][0] + " = '" + data[heads[i][0]] + "' , "
 
-        db.execute("UPDATE " + TABLE_NAME +  " SET "  + new + " WHERE " + conditions)
+        db.execute('UPDATE "' + TABLE_NAME + '"' + ' SET '  + new + ' WHERE ' + conditions)
         mydb.commit()
 
         #get all rows data from database
-        db.execute("select * from " + TABLE_NAME)
+        db.execute('select * from "' + TABLE_NAME + '"')
         rows = db.fetchall()
 
         return render_template("change.html", rows = rows, heads = heads, tables = tables, host=host, database=database, user=user, password=password, exit="Exit", TABLE_NAME = TABLE_NAME)
@@ -123,6 +123,7 @@ def add():
     database = request.form.get("database")
     user = request.form.get("user")
     password = request.form.get("password")
+
 
     # Configure psycopg2 to use POSTGRESQL database if credentials are correct
     mydb = psycopg2.connect(user=user, password = password, host = host, database=database)
@@ -155,7 +156,7 @@ def add():
             break
         cols += heads[i][0] + ", "
 
-    db.execute("INSERT INTO " + TABLE_NAME + cols + " VALUES" + values)
+    db.execute('INSERT INTO "' + TABLE_NAME + '"' + cols + ' VALUES' + values)
     mydb.commit()
 
     # select tables from datbaase
@@ -163,7 +164,7 @@ def add():
     tables = db.fetchall()
 
     #get all rows data from database
-    db.execute("select * from " + TABLE_NAME)
+    db.execute('select * from "' + TABLE_NAME + '"')
     rows = db.fetchall()
 
     return render_template("change.html", rows = rows, heads = heads, tables = tables, host=host, database=database, user=user, password=password, exit="Exit", TABLE_NAME = TABLE_NAME)
@@ -178,6 +179,10 @@ def index():
         user = request.form.get("user")
         password = request.form.get("password")
 
+        host = "ec2-54-74-14-109.eu-west-1.compute.amazonaws.com"
+        database= "d8lued2265pr44"
+        user= "kdjmispwzuqrpa"
+        password= "79fabf4112ead809504789c52d5037b2ecdd9967a4a4ef9c64c79df78bf36064"
 
         # Configure psycopg2 to use POSTGRESQL database if credentials are correct
         try:
@@ -219,7 +224,7 @@ def change():
     heads = db.fetchall()
 
     #get all rows data from database
-    db.execute("select * from " + TABLE_NAME)
+    db.execute('select * from "' + TABLE_NAME + '"')
     rows = db.fetchall()
 
     #get columns type
